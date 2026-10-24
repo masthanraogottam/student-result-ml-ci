@@ -38,10 +38,10 @@ class TestMLPipeline(unittest.TestCase):
             "assignment_marks": 80,
             "previous_score": 78,
         }])
-        prediction = int(model.predict(sample)[0])
-        self.assertIn(prediction, (0, 1))
+        self.assertIn(int(model.predict(sample)[0]), (0, 1))
 
     def test_high_performance_sample_passes(self):
+        # Expected label for this sample from the dataset-generation rule.
         model = joblib.load(self.model_path)
         sample = pd.DataFrame([{
             "attendance": 90,
