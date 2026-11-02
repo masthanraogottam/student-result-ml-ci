@@ -1,4 +1,4 @@
-name: Student Result ML CI
+name: Student Result ML CI and Delivery
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  train-test:
+  train-test-package:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -32,5 +32,23 @@ jobs:
       - name: Train model and generate metrics
         run: python train_model.py
 
-      - name: Run automated tests
+      - name: Enforce model quality gate
+        run: python quality_gate.py
+
+      - name: Run ML and API tests
         run: python -m unittest discover -v
+
+      - name: Prepare release candidate
+        run: |
+          mkdir -p release_candidate
+          cp app.py train_model.py requirements.txt Dockerfile .dockerignore release_candidate/
+          cp student_result_model.pkl metrics.json release_candidate/
+          printf "Student Result Prediction API\nRun with: uvicorn app:app --host 0.0.0.0 --port 8000\nEndpoints: /health, /predict, /metrics, /docs\n" > release_candidate/DEPLOYMENT.txt
+
+      - name: Upload release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: student-result-ml-release
+          path: release_candidate/
+          if-no-files-found: error
+          retention-days: 7
