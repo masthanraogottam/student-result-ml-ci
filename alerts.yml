@@ -1,0 +1,17 @@
+groups:
+  - name: student-result-api-alerts
+    rules:
+      - alert: StudentResultApiDown
+        expr: up{job="student-result-api"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Student Result Prediction API is unavailable
+      - alert: StudentResultApiHighClientErrors
+        expr: sum(rate(student_api_http_requests_total{job="student-result-api",status=~"4.."}[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Repeated API client errors detected
