@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.log
+student_results.csv
+student_result_model.pkl
+metrics.json
+release_candidate/
