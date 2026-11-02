@@ -1,38 +1,50 @@
 name: Student Result ML CI and Delivery
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   train-test-package:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
           cache-dependency-path: requirements.txt
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
       - name: Train model
         run: python train_model.py
+
       - name: Model quality gate
         run: python quality_gate.py
+
       - name: ML and API tests
         run: python -m unittest discover -v
+
       - name: Prepare release candidate
         run: |
           mkdir -p release_candidate
           cp app.py train_model.py requirements.txt Dockerfile .dockerignore release_candidate/
           cp student_result_model.pkl metrics.json release_candidate/
-          printf "Student Result Prediction API\nRun: uvicorn app:app --host 0.0.0.0 --port 8000\nEndpoints: /health, /predict, /metrics, /docs\n" > release_candidate/DEPLOYMENT.txt
+          printf '%s\n' 'Student Result Prediction API' 'Run: uvicorn app:app --host 0.0.0.0 --port 8000' 'Endpoints: /health, /predict, /metrics, /docs' > release_candidate/DEPLOYMENT.txt
+
       - name: Upload release candidate
         uses: actions/upload-artifact@v4
         with:
